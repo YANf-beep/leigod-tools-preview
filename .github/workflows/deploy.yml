@@ -1,0 +1,30 @@
+name: Deploy independent preview to GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    environment: github-pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack isolated website
+        run: |
+          cat site-source.zip.part* > /tmp/site-source.zip
+          echo "5c6197259b981535b42a3a7081fd587ccf32027a89c16d53fc308ae9a8cf4d0a  /tmp/site-source.zip" | sha256sum -c -
+          unzip -q /tmp/site-source.zip -d /tmp/preview
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: /tmp/preview/site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
